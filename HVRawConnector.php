@@ -25,7 +25,7 @@ if (!function_exists('qp')) {
 }
 
 class HVRawConnector {
-  public static $version = 'HVRawConnector0.1';
+  public static $version = 'HVRawConnector1.0.0';
 
   private $session;
   private $appId;
