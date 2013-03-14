@@ -39,3 +39,9 @@ Licence
 -------
 
 [GPLv2](https://raw.github.com/mkalkbrenner/HVRawConnectorPHP/master/LICENSE.txt).
+
+
+Sponsor
+-------
+[bio.logis](https://www.biologis.com) offers users of
+[pgsbox.de](https://pgsbox.de) to upload diagnostic reports to HealthVault.
