@@ -44,4 +44,4 @@ Licence
 Sponsor
 -------
 [bio.logis](https://www.biologis.com) offers users of
-[pgsbox.de](https://pgsbox.de) to upload clinical reports to HealthVault.
+[pgsbox.de](https://pgsbox.de) to upload diagnostic reports to HealthVault.
