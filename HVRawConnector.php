@@ -168,7 +168,7 @@ class HVRawConnector {
         case 65: // The authenticated session token has expired.
           // the easiest solution is to invalidate everything and let the user initialize a new connection @see _construct()
           HVRawConnector::invalidateSession($this->session);
-          break;
+          throw new HVRawConnectorAuthenticationExpiredException($this->qpResponse->find(':root error message')->text(), $this->responseCode);
       }
       throw new HVRawConnectorWcRequestException($this->qpResponse->find(':root error message')->text(), $this->responseCode);
     }
@@ -410,8 +410,10 @@ XML;
   );
 }
 
-class HVRawConnectorUserNotAuthentifiedException extends Exception {}
+class HVRawConnectorUserNotAuthenticatedException extends Exception {}
 
-class HVRawConnectorAppNotAuthentifiedException extends Exception {}
+class HVRawConnectorAppNotAuthenticatedException extends Exception {}
+
+class HVRawConnectorAuthenticationExpiredException extends Exception {}
 
 class HVRawConnectorWcRequestException extends Exception {}

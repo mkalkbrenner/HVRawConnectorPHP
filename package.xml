@@ -5,9 +5,9 @@
          xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
     <name>HVRawConnector</name>
     <channel>pear.biologis.com</channel>
-    <summary>Simple PHP library to connect Microsoft HealthVault.</summary>
+    <summary>Simple PHP library to connect to Microsoft HealthVault using raw XML.</summary>
     <description>
-        Simple PHP library to connect Microsoft HealthVault.
+        Simple PHP library to connect to Microsoft HealthVault using raw XML.
     </description>
 
     <lead>
@@ -16,10 +16,10 @@
         <email>info@bio.logis.de</email>
         <active>yes</active>
     </lead>
-    <date>2013-03-14</date>
+    <date>2013-03-15</date>
 
     <version>
-        <release>1.0.0</release>
+        <release>1.0.1</release>
         <api>1.0.0</api>
     </version>
 
@@ -30,7 +30,7 @@
 
     <license uri="https://raw.github.com/mkalkbrenner/HVRawConnectorPHP/master/LICENSE.txt">GPLv2</license>
     <notes>
-        First release.
+        fixed exceptions
     </notes>
 
     <contents>
@@ -98,6 +98,21 @@
     </phprelease>
 
     <changelog>
+        <release>
+            <version>
+                <release>1.0.1</release>
+                <api>1.0.0</api>
+            </version>
+            <stability>
+                <release>stable</release>
+                <api>alpha</api>
+            </stability>
+            <date>2013-03-15</date>
+            <license uri="https://raw.github.com/mkalkbrenner/HVRawConnectorPHP/master/LICENSE.txt">GPLv2</license>
+            <notes>
+                * fixed exceptions
+            </notes>
+        </release>
         <release>
             <version>
                 <release>1.0.0</release>

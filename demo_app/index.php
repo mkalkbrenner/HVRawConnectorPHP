@@ -12,6 +12,11 @@ $appId = file_get_contents('app.id');
 
 session_start();
 
+ob_start();
+
+print "Connecting HealthVault ...<br><hr>";
+ob_flush();
+
 try {
   $hv = new HVRawConnector(
     $appId,
@@ -19,8 +24,6 @@ try {
     'app.pem',
     $_SESSION
   );
-
-  ob_start();
 
   $hv->authentifiedWcRequest('GetPersonInfo');
 
@@ -44,10 +47,12 @@ try {
     ob_flush();
   }
 }
-catch (HVRawConnectorUserNotAuthentifiedException $e) {
+catch (HVRawConnectorUserNotAuthenticatedException $e) {
+  print "You're not authenticated! ";
   printAuthenticationLink();
 }
-catch (HVRawConnectorCredentialTokenExpiredException $e) {
+catch (HVRawConnectorAuthenticationExpiredException $e) {
+  print "Your authentication expired! ";
   printAuthenticationLink();
 }
 
