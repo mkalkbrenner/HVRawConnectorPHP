@@ -1,16 +1,8 @@
 HVRawConnectorPHP
 =================
 
-HVRawConnectorPHP is simple PHP library to connect to
-[Microsoft HealthVault](https://www.healthvault.com/). It enables PHP developers
-to send and receive raw XML documents to and from HealthVault and hides the
-complicated part of the protocol, espacially the various hashing and signing parts.
-
-If you're interested in a high level API to build HealthVault applications with
-PHP, have a look at
-[HVClientLibPHP](https://github.com/mkalkbrenner/HVClientLibPHP/) which aims to
-provide a nice object oriented programming interface comparable to Microsoft's
-HealthVault SDK.
+Simple PHP library to connect to
+[Microsoft HealthVault](https://www.healthvault.com/).
 
 
 Installation

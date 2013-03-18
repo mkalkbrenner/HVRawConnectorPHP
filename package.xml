@@ -111,6 +111,7 @@
             <license uri="https://raw.github.com/mkalkbrenner/HVRawConnectorPHP/master/LICENSE.txt">GPLv2</license>
             <notes>
                 * fixed exceptions
+                * fixed various typos
             </notes>
         </release>
         <release>

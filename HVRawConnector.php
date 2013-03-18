@@ -66,7 +66,7 @@ class HVRawConnector {
       $this->userAuthToken = $this->session['healthVault']['userAuthToken'];
     }
     else {
-      throw new HVRawConnectorUserNotAuthentifiedException();
+      throw new HVRawConnectorUserNotAuthenticatedException();
     }
 
     if (empty($this->session['healthVault']['authToken'])) {
@@ -103,8 +103,8 @@ class HVRawConnector {
   }
 
 
-  public function authentifiedWcRequest($method, $methodVersion = '1', $info = '', $additionalHeaders = array()) {
-    $header = $this->getBasicCommandQueryPath(HVRawConnector::$authentifiedWcRequestXML, $method, $methodVersion, $info)
+  public function authenticatedWcRequest($method, $methodVersion = '1', $info = '', $additionalHeaders = array()) {
+    $header = $this->getBasicCommandQueryPath(HVRawConnector::$authenticatedWcRequestXML, $method, $methodVersion, $info)
       ->find(':root header hash-data')->text($this->hash(empty($info) ? '<info/>' : '<info>' . $info . '</info>'))
       ->find(':root header auth-token')->text($this->authToken)
       ->find(':root header user-auth-token')->text($this->userAuthToken)
@@ -256,7 +256,7 @@ class HVRawConnector {
 </wc-request:request>
 XML;
 
-  private static $authentifiedWcRequestXML = <<<XML
+  private static $authenticatedWcRequestXML = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <wc-request:request xmlns:wc-request="urn:com.microsoft.wc.request">
   <auth>

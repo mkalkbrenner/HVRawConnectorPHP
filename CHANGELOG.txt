@@ -1,7 +1,8 @@
-HVRawConnector 1.0.1 - 2013-03-15
+HVRawConnector 1.0.1 - 2013-03-18
 =================================
 
-* first release
+* fixed exceptions
+* fixed various typos
 
 
 HVRawConnector 1.0.0 - 2013-03-14
