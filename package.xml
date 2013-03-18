@@ -16,7 +16,7 @@
         <email>info@bio.logis.de</email>
         <active>yes</active>
     </lead>
-    <date>2013-03-15</date>
+    <date>2013-03-18</date>
 
     <version>
         <release>1.0.1</release>
@@ -107,7 +107,7 @@
                 <release>stable</release>
                 <api>alpha</api>
             </stability>
-            <date>2013-03-15</date>
+            <date>2013-03-18</date>
             <license uri="https://raw.github.com/mkalkbrenner/HVRawConnectorPHP/master/LICENSE.txt">GPLv2</license>
             <notes>
                 * fixed exceptions
