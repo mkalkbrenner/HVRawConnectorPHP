@@ -1,0 +1,32 @@
+{
+    "name": "biologis/HVRawConnector",
+    "type": "library",
+    "description": "Simple PHP library to connect to Microsoft HealthVault using raw XML.",
+    "keywords": ["healthvault", "xml"],
+    "homepage": "https://github.com/mkalkbrenner/HVRawConnectorPHP",
+    "license": "GPL-2.0+",
+    "authors": [
+        {
+            "name": "Markus Kalkbenner",
+            "email": "info@bio.logis.de"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "pear",
+            "url": "http://pear.php.net"
+        }
+    ],
+    "require": {
+        "pear-pear.php.net/Net_URL2": ">=2.0.0.0",
+        "php": ">=5.3.2",
+        "psr/log": "1.0.0",
+        "querypath/QueryPath": "2.1.2"
+    },
+    "autoload":{
+        "psr-0":{
+            "biologis": "src/"
+        },
+        "files": ["vendor/querypath/QueryPath/src/QueryPath/QueryPath.php"]
+    }
+}

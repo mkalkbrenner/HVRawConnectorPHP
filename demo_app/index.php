@@ -6,7 +6,11 @@
  * @author Markus Kalkbrenner <info@bio.logis.de>
  */
 
-require_once '../HVRawConnector.php';
+use biologis\HV\HVRawConnector;
+use biologis\HV\HVRawConnectorUserNotAuthenticatedException;
+use biologis\HV\HVRawConnectorAuthenticationExpiredException;
+
+require '../vendor/autoload.php';
 
 $appId = file_get_contents('app.id');
 
@@ -25,7 +29,9 @@ try {
     $_SESSION
   );
 
-  $hv->authentifiedWcRequest('GetPersonInfo');
+  $hv->connect();
+
+  $hv->authenticatedWcRequest('GetPersonInfo');
 
   #var_dump($hv->getRawResponse());
 
@@ -36,7 +42,7 @@ try {
   ob_flush();
 
   foreach (HVRawConnector::$things as $thing => $thingId) {
-    $hv->authentifiedWcRequest(
+    $hv->authenticatedWcRequest(
       'GetThings',
       '3',
       '<group max="30"><filter><type-id>' . $thingId . '</type-id></filter><format><section>core</section><xml/></format></group>',

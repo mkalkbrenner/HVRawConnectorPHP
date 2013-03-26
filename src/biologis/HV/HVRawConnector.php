@@ -6,32 +6,20 @@
  * @author Markus Kalkbrenner <info@bio.logis.de>
  */
 
-/**
- * @see http://pear.php.net/package/Net_URL2
- */
-require_once 'Net/URL2.php';
+namespace biologis\HV;
 
-/**
- * @see http://pear.php.net/package/Log
- */
-require_once 'Log.php';
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
-/**
- * @see http://querypath.org
- * @see http://pear.querypath.org
- */
-if (!function_exists('qp')) {
-  require_once 'QueryPath/QueryPath.php';
-}
 
-class HVRawConnector {
-  public static $version = 'HVRawConnector1.0.0';
+class HVRawConnector implements LoggerAwareInterface {
+  public static $version = 'HVRawConnector1.1.0';
 
   private $session;
   private $appId;
   private $thumbPrint;
   private $privateKeyFile;
-  private $healthVaultPlatform;
   private $sharedSecret;
   private $digest;
   private $authToken;
@@ -39,15 +27,32 @@ class HVRawConnector {
   private $rawResponse;
   private $qpResponse;
   private $responseCode;
-  private $logger;
+  private $logger = NULL;
+  private $healthVaultPlatform = 'https://platform.healthvault-ppe.com/platform/wildcat.ashx';
+  private $language = '';
+  private $country = '';
 
-  public function __construct($appId, $thumbPrint, $privateKeyFile, &$session, $healthVaultPlatform = 'https://platform.healthvault-ppe.com/platform/wildcat.ashx', Log $logger = NULL) {
+  public function setLogger(LoggerInterface $logger) {
+    $this->logger = $logger;
+  }
+
+  public function setCountry($country) {
+    $this->country = $country;
+  }
+
+  public function setLanguage($language) {
+    $this->language = $language;
+  }
+
+  public function setHealthVaultPlatform($healthVaultPlatform) {
+    $this->healthVaultPlatform = $healthVaultPlatform;
+  }
+
+  public function __construct($appId, $thumbPrint, $privateKeyFile, &$session) {
     $this->session = & $session;
     $this->appId = $appId;
     $this->thumbPrint = $thumbPrint;
     $this->privateKeyFile = $privateKeyFile;
-    $this->healthVaultPlatform = $healthVaultPlatform;
-    $this->logger = is_null($logger) ? Log::singleton('null') : $logger;
 
     if (empty($this->session['healthVault']['sharedSecret'])) {
       $this->session['healthVault']['sharedSecret'] = $this->hash(uniqid());
@@ -56,6 +61,12 @@ class HVRawConnector {
 
     $this->sharedSecret = $this->session['healthVault']['sharedSecret'];
     $this->digest = $this->session['healthVault']['digest'];
+  }
+
+  public function connect() {
+    if (!$this->logger) {
+      $this->logger = new NullLogger();
+    }
 
     if (empty($this->session['healthVault']['userAuthToken']) && !empty($_GET['wctoken']) && $_GET['redirectToken'] == $this->session['healthVault']['redirectToken']) {
       // TODO verify wctoken / security check
@@ -94,8 +105,7 @@ class HVRawConnector {
 
   public function anonymousWcRequest($method, $methodVersion = '1', $info = '', $additionalHeaders = array()) {
     $header = $this->getBasicCommandQueryPath(HVRawConnector::$anonymousWcRequestXML, $method, $methodVersion, $info)
-      ->find(':root header app-id')->text($this->appId)
-      ->find(':root header');
+      ->find(':root header app-id')->text($this->appId);
 
     $this->addAdditionalHeadersToWcRequest($header, $additionalHeaders);
 
@@ -107,8 +117,7 @@ class HVRawConnector {
     $header = $this->getBasicCommandQueryPath(HVRawConnector::$authenticatedWcRequestXML, $method, $methodVersion, $info)
       ->find(':root header hash-data')->text($this->hash(empty($info) ? '<info/>' : '<info>' . $info . '</info>'))
       ->find(':root header auth-token')->text($this->authToken)
-      ->find(':root header user-auth-token')->text($this->userAuthToken)
-      ->find(':root header');
+      ->find(':root header user-auth-token')->text($this->userAuthToken);
 
     $this->addAdditionalHeadersToWcRequest($header, $additionalHeaders);
     $headerRawXml = $header->find(':root header')->xml();
@@ -131,6 +140,12 @@ class HVRawConnector {
 
 
   private function addAdditionalHeadersToWcRequest($header, $additionalHeaders) {
+    if ($this->language) {
+      $header->find(':root header language')->text($this->language);
+    }
+    if ($this->country) {
+      $header->find(':root header language')->text($this->country);
+    }
     if (!empty($additionalHeaders)) {
       $header->find(':root method-version');
       foreach ($additionalHeaders as $element => $text) {
@@ -147,21 +162,22 @@ class HVRawConnector {
         'content' => preg_replace('/>\s+</', '><', $qpObject->find(':root')->xml()),
       ),
     );
-    $this->logger->log('Request: ' . $params['http']['content'], PEAR_LOG_DEBUG);
+    var_dump($params['http']['content']);
+    $this->logger->debug('Request: ' . $params['http']['content']);
     $ctx = stream_context_create($params);
     $this->rawResponse = @file_get_contents($this->healthVaultPlatform, FALSE, $ctx);
     if (!$this->rawResponse) {
       $this->qpResponse = NULL;
       $this->responseCode = -1;
-      throw new Exception('HealtVault Connection Failure', -1);
+      throw new \Exception('HealthVault Connection Failure', -1);
     }
-    $this->logger->log('Response: ' . $this->rawResponse, PEAR_LOG_DEBUG);
+    $this->logger->debug('Response: ' . $this->rawResponse);
     $this->qpResponse = qp($this->rawResponse, NULL, array('use_parser' => 'xml'));
     $this->responseCode = (int) $this->qpResponse->xpath('/response/status/code')->text();
 
     if ($this->responseCode > 0) {
-      $this->logger->log('Response Code: ' . $this->responseCode, PEAR_LOG_ERR);
-      $this->logger->log('Error Message: ' . $this->qpResponse->find(':root error message')->text(), PEAR_LOG_ERR);
+      $this->logger->error('Response Code: ' . $this->responseCode);
+      $this->logger->error('Error Message: ' . $this->qpResponse->find(':root error message')->text());
       switch ($this->responseCode) {
         // TODO add more error codes
         case 7: // The user authenticated session token has expired.
@@ -212,10 +228,10 @@ class HVRawConnector {
   public static function getAuthenticationURL($appId, $redirect, &$session, $healthVaultAuthInstance = 'https://account.healthvault-ppe.com/redirect.aspx') {
     $session['healthVault']['redirectToken'] = md5(uniqid());
 
-    $redirectUrl = new Net_URL2($redirect);
+    $redirectUrl = new \Net_URL2($redirect);
     $redirectUrl->setQueryVariable('redirectToken', $session['healthVault']['redirectToken']);
 
-    $healthVaultUrl = new Net_URL2($healthVaultAuthInstance);
+    $healthVaultUrl = new \Net_URL2($healthVaultAuthInstance);
     $healthVaultUrl->setQueryVariables(array(
       'target' => 'AUTH',
       'targetqs' => '?appid=' . $appId . '&redirect=' . $redirectUrl->getURL(),
@@ -410,10 +426,10 @@ XML;
   );
 }
 
-class HVRawConnectorUserNotAuthenticatedException extends Exception {}
+class HVRawConnectorUserNotAuthenticatedException extends \Exception {}
 
-class HVRawConnectorAppNotAuthenticatedException extends Exception {}
+class HVRawConnectorAppNotAuthenticatedException extends \Exception {}
 
-class HVRawConnectorAuthenticationExpiredException extends Exception {}
+class HVRawConnectorAuthenticationExpiredException extends \Exception {}
 
-class HVRawConnectorWcRequestException extends Exception {}
+class HVRawConnectorWcRequestException extends \Exception {}
