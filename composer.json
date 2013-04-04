@@ -1,5 +1,5 @@
 {
-    "name": "biologis/HVRawConnector",
+    "name": "biologis/hv-raw-connector",
     "type": "library",
     "description": "Simple PHP library to connect to Microsoft HealthVault using raw XML.",
     "keywords": ["healthvault", "xml"],
