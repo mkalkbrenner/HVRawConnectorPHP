@@ -14,7 +14,7 @@ use Psr\Log\NullLogger;
 
 
 class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterface {
-  public static $version = 'HVRawConnector1.1.0';
+  public static $version = 'HVRawConnector1.2.0';
 
   private $session;
   private $appId;
@@ -77,19 +77,19 @@ class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterf
 
     if (empty($this->session['healthVault']['authToken'])) {
       $info = qp(HVRawConnector::$commandCreateAuthenticatedSessionTokenXML, NULL, array('use_parser' => 'xml'))
-        ->xpath('auth-info/app-id')->text($this->appId)
-        ->xpath('//content/app-id')->text($this->appId)
-        ->find(':root sig')->attr('thumbprint', $this->thumbPrint)
-        ->find(':root hmac-alg')->text($this->digest);
+        ->xpath('auth-info/app-id')->text($this->appId)->top()
+        ->xpath('//content/app-id')->text($this->appId)->top()
+        ->find('sig')->attr('thumbprint', $this->thumbPrint)->top()
+        ->find('hmac-alg')->text($this->digest)->top();
 
-      $content = $info->find(':root content')->xml();
+      $content = $info->find('content')->xml();
 
-      $xml = $info->find(':root sig')->text($this->sign($content))->find(':root')->innerXML();
+      $xml = $info->top()->find('sig')->text($this->sign($content))->top()->innerXML();
 
       // throws HVRawConnectorAnonymousWcRequestException
       $this->anonymousWcRequest('CreateAuthenticatedSessionToken', '1', $xml);
 
-      $this->session['healthVault']['authToken'] = $this->qpResponse->find(':root token')->text();
+      $this->session['healthVault']['authToken'] = $this->qpResponse->find('token')->text();
     }
 
     if (!empty($this->session['healthVault']['authToken'])) {
@@ -100,7 +100,7 @@ class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterf
 
   public function anonymousWcRequest($method, $methodVersion = '1', $info = '', $additionalHeaders = array()) {
     $header = $this->getBasicCommandQueryPath(HVRawConnector::$anonymousWcRequestXML, $method, $methodVersion, $info)
-      ->find(':root header app-id')->text($this->appId);
+      ->find('header app-id')->text($this->appId)->top();
 
     $this->addAdditionalHeadersToWcRequest($header, $additionalHeaders);
 
@@ -110,43 +110,42 @@ class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterf
 
   public function authenticatedWcRequest($method, $methodVersion = '1', $info = '', $additionalHeaders = array()) {
     $header = $this->getBasicCommandQueryPath(HVRawConnector::$authenticatedWcRequestXML, $method, $methodVersion, $info)
-      ->find(':root header hash-data')->text($this->hash(empty($info) ? '<info/>' : '<info>' . $info . '</info>'))
-      ->find(':root header auth-token')->text($this->authToken)
-      ->find(':root header user-auth-token')->text($this->userAuthToken);
+      ->find('header hash-data')->text($this->hash(empty($info) ? '<info/>' : '<info>' . $info . '</info>'))->top()
+      ->find('header auth-token')->text($this->authToken)->top()
+      ->find('header user-auth-token')->text($this->userAuthToken)->top();
 
     $this->addAdditionalHeadersToWcRequest($header, $additionalHeaders);
-    $headerRawXml = $header->find(':root header')->xml();
+    $headerRawXml = $header->find('header')->xml();
 
     $this->doWcRequest(
-      $header->find(':root hmac-data')->text($this->hmacSha1($headerRawXml, base64_decode($this->session['healthVault']['digest'])))
+      $header->top()->find('hmac-data')->text($this->hmacSha1($headerRawXml, base64_decode($this->session['healthVault']['digest'])))
     );
   }
 
 
   protected function getBasicCommandQueryPath($wcRequestXML, $method, $methodVersion, $info) {
     return qp($wcRequestXML)
-      ->find(':root method')->text($method)
-      ->find(':root method-version')->text($methodVersion)
-      ->find(':root msg-time')->text(gmdate("Y-m-d\TH:i:s"))
-      ->find(':root version')->text(HVRawConnector::$version)
-      ->find(':root info')->append($info)
-      ->find(':root');
+      ->find('method')->text($method)->top()
+      ->find('method-version')->text($methodVersion)->top()
+      ->find('msg-time')->text(gmdate("Y-m-d\TH:i:s"))->top()
+      ->find('version')->text(HVRawConnector::$version)->top()
+      ->find('info')->append($info)->top();
   }
 
 
   private function addAdditionalHeadersToWcRequest($header, $additionalHeaders) {
     if ($this->language) {
-      $header->find(':root header language')->text($this->language);
+      $header->top()->find('header language')->text($this->language);
     }
     if ($this->country) {
-      $header->find(':root header language')->text($this->country);
+      $header->top()->find('header language')->text($this->country);
     }
     if (!empty($additionalHeaders)) {
-      $header->find(':root method-version');
       foreach ($additionalHeaders as $element => $text) {
-        $header->after('<' . $element . '>' . $text . '</' . $element . '>');
+        $header->top()->find('method-version')->after('<' . $element . '>' . $text . '</' . $element . '>');
       }
     }
+    $header->top();
   }
 
   protected function doWcRequest($qpObject) {
@@ -154,10 +153,10 @@ class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterf
       'http' => array(
         'method' => 'POST',
         // remove line breaks and spaces between elements, otherwise the signature check will fail
-        'content' => preg_replace('/>\s+</', '><', $qpObject->find(':root')->xml()),
+        'content' => preg_replace('/>\s+</', '><', $qpObject->top()->xml()),
       ),
     );
-    var_dump($params['http']['content']);
+
     $this->logger->debug('Request: ' . $params['http']['content']);
     $ctx = stream_context_create($params);
     $this->rawResponse = @file_get_contents($this->healthVaultPlatform, FALSE, $ctx);
@@ -168,21 +167,23 @@ class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterf
     }
     $this->logger->debug('Response: ' . $this->rawResponse);
     $this->qpResponse = qp($this->rawResponse, NULL, array('use_parser' => 'xml'));
-    $this->responseCode = (int) $this->qpResponse->xpath('/response/status/code')->text();
+    $this->responseCode = (int) $this->qpResponse->find('response status code')->text();
 
     if ($this->responseCode > 0) {
       $this->logger->error('Response Code: ' . $this->responseCode);
-      $this->logger->error('Error Message: ' . $this->qpResponse->find(':root error message')->text());
+      $this->logger->error('Error Message: ' . $this->qpResponse->top()->find('error message')->text());
       switch ($this->responseCode) {
         // TODO add more error codes
         case 7: // The user authenticated session token has expired.
         case 65: // The authenticated session token has expired.
           // the easiest solution is to invalidate everything and let the user initialize a new connection @see _construct()
           HVRawConnector::invalidateSession($this->session);
-          throw new HVRawConnectorAuthenticationExpiredException($this->qpResponse->find(':root error message')->text(), $this->responseCode);
+          throw new HVRawConnectorAuthenticationExpiredException($this->qpResponse->top()->find('error message')->text(), $this->responseCode);
       }
-      throw new HVRawConnectorWcRequestException($this->qpResponse->find(':root error message')->text(), $this->responseCode);
+      throw new HVRawConnectorWcRequestException($this->qpResponse->top()->find('error message')->text(), $this->responseCode);
     }
+
+    $this->qpResponse->top();
   }
 
 
@@ -253,7 +254,7 @@ class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterf
 
 
   public function getQueryPathResponse() {
-    return $this->qpResponse->find(':root');
+    return $this->qpResponse->top();
   }
 }
 
