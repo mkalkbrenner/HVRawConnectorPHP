@@ -19,7 +19,7 @@ class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterf
   private $session;
   private $appId;
   private $thumbPrint;
-  private $privateKeyFile;
+  private $privateKey;
   private $sharedSecret;
   private $digest;
   private $authToken;
@@ -33,11 +33,21 @@ class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterf
     $this->logger = $logger;
   }
 
-  public function __construct($appId, $thumbPrint, $privateKeyFile, &$session) {
+  /**
+   * @param string $appId
+   *   HealthVault Application ID
+   * @param string $thumbPrint
+   *   Certificate thumb print
+   * @param string $privateKey
+   *   Private key as string or file path to load private key from
+   * @param array $session
+   *   Session array, in most cases $_SESSION
+   */
+  public function __construct($appId, $thumbPrint, $privateKey, &$session) {
     $this->session = & $session;
     $this->appId = $appId;
     $this->thumbPrint = $thumbPrint;
-    $this->privateKeyFile = $privateKeyFile;
+    $this->privateKey = $privateKey;
 
     if (empty($this->session['healthVault']['sharedSecret'])) {
       $this->session['healthVault']['sharedSecret'] = $this->hash(uniqid());
@@ -180,13 +190,20 @@ class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterf
     static $privateKey = NULL;
 
     if (is_null($privateKey)) {
-      if (is_file($this->privateKeyFile) && is_readable($this->privateKeyFile)) {
-        $privateKey = @file_get_contents($this->privateKeyFile);
+      if (is_file($this->privateKey)) {
+        if (is_readable($this->privateKey)) {
+          $privateKey = @file_get_contents($this->privateKey);
+        }
+        else {
+          throw new Exception('Unable to read private key file.');
+        }
       }
       else {
-        throw new Exception('Unable to read private key file.');
+        $privateKey = $this->privateKey;
       }
     }
+
+    // TODO check if $privateKey really is a key (format)
 
     openssl_sign(
       // remove line breaks and spaces between elements, otherwise the signature check will fail

@@ -1,3 +1,9 @@
+HVRawConnector 1.2.0 - 2013-xx-xx
+=================================
+
+* Major refactoring to support composer and to be dependency injection friendly
+
+
 HVRawConnector 1.0.1 - 2013-03-18
 =================================
 
