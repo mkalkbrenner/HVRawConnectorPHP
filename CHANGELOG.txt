@@ -4,6 +4,7 @@ HVRawConnector 1.3.0 - 2013-08-23
 * handle error code 11: Access is denied.
 * use param actionqs instead of redirect to pass through redirectToken
 * use param redirect for ppe setups only
+* accept additional parameters to be passed through by actionqs
 
 
 HVRawConnector 1.2.0 - 2013-04-08

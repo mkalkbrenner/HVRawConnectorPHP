@@ -63,9 +63,16 @@ class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterf
       $this->logger = new NullLogger();
     }
 
-    if (empty($this->session['healthVault']['userAuthToken']) && !empty($_GET['wctoken']) && $_GET['actionqs'] == $this->session['healthVault']['redirectToken']) {
-      // TODO verify wctoken / security check
-      $this->session['healthVault']['userAuthToken'] = $_GET['wctoken'];
+    if (empty($this->session['healthVault']['userAuthToken']) && !empty($_GET['wctoken']) && !empty($_GET['actionqs'])) {
+      $this->session['healthVault']['actionQs'] = array();
+      parse_str($_GET['actionqs'], $this->session['healthVault']['actionQs']);
+
+      if ($this->session['healthVault']['actionQs']['redirectToken'] == $this->session['healthVault']['redirectToken']) {
+        // TODO verify wctoken / security check
+        $this->session['healthVault']['userAuthToken'] = $_GET['wctoken'];
+      }
+
+      unset($this->session['healthVault']['actionQs']['redirectToken']);
     }
 
     if (!empty($this->session['healthVault']['userAuthToken'])) {
@@ -229,12 +236,16 @@ class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterf
   }
 
 
-  public static function getAuthenticationURL($appId, &$session, $healthVaultAuthInstance = 'https://account.healthvault-ppe.com/redirect.aspx', $redirect = '') {
-    $session['healthVault']['redirectToken'] = md5(uniqid());
+  public static function getAuthenticationURL($appId, &$session, $healthVaultAuthInstance = 'https://account.healthvault-ppe.com/redirect.aspx', $redirect = '', $actionQs = array()) {
+    $actionQs['redirectToken'] = $session['healthVault']['redirectToken'] = md5(uniqid());
+
+    array_walk($actionQs, function(&$v, $k) {
+      $v = $k . '=' . rawurlencode($v);
+    });
 
     $params = array(
       'target' => 'AUTH',
-      'targetqs' => '?appid=' . $appId . '&actionqs=' . $session['healthVault']['redirectToken'],
+      'targetqs' => '?appid=' . $appId . '&actionqs=' . rawurlencode(implode('&', $actionQs)),
     );
 
     if (!empty($redirect)) {
