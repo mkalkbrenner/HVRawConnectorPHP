@@ -1,7 +1,7 @@
 {
     "name": "biologis/hv-raw-connector",
     "type": "library",
-    "description": "Simple PHP library to connect to Microsoft HealthVault using raw XML.",
+    "description": "Simple PHP library to connect to Microsoft® HealthVault® using raw XML.",
     "keywords": ["healthvault", "xml"],
     "homepage": "https://github.com/mkalkbrenner/HVRawConnectorPHP",
     "license": "GPL-2.0+",

@@ -63,7 +63,7 @@ class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterf
       $this->logger = new NullLogger();
     }
 
-    if (empty($this->session['healthVault']['userAuthToken']) && !empty($_GET['wctoken']) && $_GET['redirectToken'] == $this->session['healthVault']['redirectToken']) {
+    if (empty($this->session['healthVault']['userAuthToken']) && !empty($_GET['wctoken']) && $_GET['actionqs'] == $this->session['healthVault']['redirectToken']) {
       // TODO verify wctoken / security check
       $this->session['healthVault']['userAuthToken'] = $_GET['wctoken'];
     }
@@ -118,7 +118,7 @@ class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterf
     $headerRawXml = $header->find('header')->xml();
 
     $this->doWcRequest(
-      $header->top()->find('hmac-data')->text($this->hmacSha1($headerRawXml, base64_decode($this->session['healthVault']['digest'])))
+      $header->top()->find('hmac-data')->text($this->hmacSha1($headerRawXml, base64_decode($this->digest)))
     );
   }
 
@@ -175,9 +175,10 @@ class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterf
       switch ($this->responseCode) {
         // TODO add more error codes
         case 7: // The user authenticated session token has expired.
+        case 11: // Access is denied. (Happens when the user revokes grants for the app during an active session.)
         case 65: // The authenticated session token has expired.
-          // the easiest solution is to invalidate everything and let the user initialize a new connection @see _construct()
-          HVRawConnector::invalidateSession($this->session);
+          // the easiest solution is to invalidate everything and let the user initialize a new connection @see connect()
+          $this->invalidateSession();
           throw new HVRawConnectorAuthenticationExpiredException($this->qpResponse->top()->find('error message')->text(), $this->responseCode);
       }
       throw new HVRawConnectorWcRequestException($this->qpResponse->top()->find('error message')->text(), $this->responseCode);
@@ -228,23 +229,35 @@ class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterf
   }
 
 
-  public static function getAuthenticationURL($appId, $redirect, &$session, $healthVaultAuthInstance = 'https://account.healthvault-ppe.com/redirect.aspx') {
+  public static function getAuthenticationURL($appId, &$session, $healthVaultAuthInstance = 'https://account.healthvault-ppe.com/redirect.aspx', $redirect = '') {
     $session['healthVault']['redirectToken'] = md5(uniqid());
 
-    $redirectUrl = new \Net_URL2($redirect);
-    $redirectUrl->setQueryVariable('redirectToken', $session['healthVault']['redirectToken']);
-
-    $healthVaultUrl = new \Net_URL2($healthVaultAuthInstance);
-    $healthVaultUrl->setQueryVariables(array(
+    $params = array(
       'target' => 'AUTH',
-      'targetqs' => '?appid=' . $appId . '&redirect=' . $redirectUrl->getURL(),
-    ));
+      'targetqs' => '?appid=' . $appId . '&actionqs=' . $session['healthVault']['redirectToken'],
+    );
+
+    if (!empty($redirect)) {
+      $params['targetqs'] .= '&redirect=' . $redirect;
+    }
+
+    if (!empty($actionqs)) {
+      ;
+    }
+
+    // see http://msdn.microsoft.com/library/ff803620.aspx
+    $healthVaultUrl = new \Net_URL2($healthVaultAuthInstance);
+    $healthVaultUrl->setQueryVariables($params);
 
     return $healthVaultUrl->getURL();
   }
 
-  public static function invalidateSession(&$session) {
-    unset($session['healthVault']);
+
+  public function invalidateSession() {
+    $this->logger->debug('invalidating session');
+    unset($this->session['healthVault']);
+    $this->session['healthVault']['sharedSecret'] = $this->sharedSecret;
+    $this->session['healthVault']['digest'] = $this->digest;
   }
 
 

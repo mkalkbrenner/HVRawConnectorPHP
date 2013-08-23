@@ -2,7 +2,7 @@ HVRawConnectorPHP
 =================
 
 Simple PHP library to connect to
-[Microsoft HealthVault](https://www.healthvault.com/).
+[Microsoft® HealthVault®](https://www.healthvault.com/).
 
 
 Installation
@@ -57,4 +57,4 @@ Licence
 Sponsor
 -------
 [bio.logis](https://www.biologis.com) offers users of
-[pgsbox.de](https://pgsbox.de) to upload diagnostic reports to HealthVault.
+[pgsbox.de](https://pgsbox.de) to upload diagnostic reports to HealthVault®.

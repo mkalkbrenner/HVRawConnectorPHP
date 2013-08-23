@@ -66,7 +66,9 @@ function printAuthenticationLink() {
   global $appId;
 
   print '<a href="' . HVRawConnector::getAuthenticationURL($appId,
-    'http' . (!empty($_SERVER["HTTP_SSL"]) ? 's' : '') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],
-    $_SESSION) .
+      $_SESSION,
+      'https://account.healthvault-ppe.com/redirect.aspx',
+      'http' . (!empty($_SERVER["HTTP_SSL"]) ? 's' : '') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']
+    ) .
     '">Authenticate</a>';
 }

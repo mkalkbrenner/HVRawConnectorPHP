@@ -23,9 +23,9 @@ interface HVRawConnectorInterface {
 
   public function authenticatedWcRequest($method, $methodVersion, $info, $additionalHeaders);
 
-  public static function getAuthenticationURL($appId, $redirect, &$session, $healthVaultAuthInstance);
+  public static function getAuthenticationURL($appId, &$session, $healthVaultAuthInstance, $redirect);
 
-  public static function invalidateSession(&$session);
+  public function invalidateSession();
 
   public function getRawResponse();
 
