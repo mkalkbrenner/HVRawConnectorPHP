@@ -14,7 +14,7 @@ use Psr\Log\NullLogger;
 
 
 class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterface {
-  public static $version = 'HVRawConnector1.2.0';
+  public static $version = 'HVRawConnector1.3.1';
 
   private $session;
   private $appId;
@@ -243,9 +243,24 @@ class HVRawConnector extends AbstractHVRawConnector implements LoggerAwareInterf
       $v = $k . '=' . rawurlencode($v);
     });
 
+    // explaination of tragetqs parameter:
+    // @see http://msdn.microsoft.com/en-us/library/ff803620.aspx
+    //
+    // - aib
+    //  (allow instance bounce) indicates whether the user can be redirected to
+    //  another instance on this request. For more information, see The allow
+    //  instance bounce (aib) parameter.
+    //  Default needs to be "true" as of the 1306 release.
+    //  @see http://msdn.microsoft.com/en-us/library/dn312210.aspx#appInHealthVaultGlobalArchitecture
+    //
+    // - redirect
+    //   redirect is for non-production use only. For redirections where the
+    //   Shell redirects to the calling application after performing some
+    //   function, this value overrides the ActionURL application metadata.
+
     $params = array(
       'target' => 'AUTH',
-      'targetqs' => '?appid=' . $appId . '&actionqs=' . rawurlencode(implode('&', $actionQs)),
+      'targetqs' => '?appid=' . $appId . '&aib=true&actionqs=' . rawurlencode(implode('&', $actionQs)),
     );
 
     if (!empty($redirect)) {
