@@ -1,39 +1,44 @@
 HVRawConnectorPHP
 =================
 
-Simple PHP library to connect to
+Simple low level PHP library to connect to
 [Microsoft HealthVault](https://www.healthvault.com/).
 
 
 Installation
 ------------
 
-HVRawConnectorPHP depends on some PHP libraries. If you simply use the latest
-development version of HVRawConnectorPHP from github you have to ensure that
-all of them are installed. You can use pear to do so:
+HVRawConnectorPHP depends on some PHP libraries. But you can simply use composer to install HVRawConnectorPHP and it's dependencies.
 
-    pear channel-discover pear.querypath.org
-    pear install querypath/QueryPath
-    pear install Log
-    pear install Net_URL2
+To add HVRawConnectorPHP as a library in your project, add something like that to
+the 'require' section of your `composer.json`:
 
-HVRawConnectorPHP itself could be installed by pear, too. In that case all the
-dependencies mentioned above will be installed automatically:
+```json
+{
+  "require": {
+    "biologis/hv-raw-connector": "dev-master"
+  }
+}
+```
 
-    pear channel-discover pear.biologis.com
-    pear channel-discover pear.querypath.org
-    pear install biologis/HVRawConnector
-
-This method will install HVRawConnectorPHP as a library, but without the
-available demo application.
-
+If composer complains about an unknown pear channel, add this to your `composer.json`:
+```json
+{
+  "repositories": [
+    {
+      "type": "pear",
+      "url": "http://pear.php.net"
+    }
+  ]
+}
+```
 
 Usage
 -----
 
-Some examples will follow later.
+Due to the fact that HVRawConnectorPHP is a low level libary, we don't want to provide brief instructions here. But if you're interested you can have a look at the demo_app source code that comes with the lib.
 
-Meanwhile you can have a look at the demo_app source code.
+To develop HealthVault applications using PHP we recommend to use the [HVClientLib](http://mkalkbrenner.github.io/HVClientLibPHP/) instead which has been created on top of HVRawConnectorPHP.
 
 
 Demo
